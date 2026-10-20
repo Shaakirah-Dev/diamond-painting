@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cozy Painting Studio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="level-title">Breathe and Relax</div>
+
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- Added a dedicated action layout bar container -->
+    <div id="palette-bar">
+        <!-- Control buttons tray panel -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <button id="modeBtn" onclick="togglePlayMode()" style="background: #8bc34a; border: none; padding: 8px 14px; border-radius: 12px; color: white; font-weight: bold; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: 0.2s;">
+                ✏️ Painting
+            </button>
+        </div>
+        <div style="width: 2px; height: 50px; background: rgba(0,0,0,0.08); margin: 0 10px;"></div>
+        <div id="palette"></div>
+    </div>
+
+    <script src="level.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+body {
+    margin: 0; padding: 0; 
+    background-color: #c5b1fc; /* Soft, relaxing cream-lavender background */
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden; height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    user-select: none;
+}
+
+/* Header Text Style matching "Level 4" from reference */
+.level-title {
+    font-size: 1.6rem; font-weight: 800; color: #5f08c2;
+    margin-bottom: 20px; text-align: center; letter-spacing: -0.5px;
+}
+
+/* THE CUTE BORDER: Perfectly centered, clean container frame with matching background padding */
+#canvas-container {
+    width: 90vw; height: 60vh;
+    max-width: 500px; max-height: 500px;
+    background-color: hsl(268, 85%, 79%); /* Cute pastel pink background wrap padding */
+    border-radius: 20px;
+    padding: 12px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 25px rgba(142, 138, 167, 0.15);
+}
+
+canvas {
+    display: block; width: 100%; height: 100%;
+    background-color: transparent;
+}
+
+/* Clean, Rounded Palette Container Tray at the bottom */
+#palette-bar {
+    height: 95px; width: 90vw; max-width: 500px;
+    background-color: #dea5ff;
+    border-radius: 24px; padding: 15px; margin-top: 30px;
+    box-sizing: border-box; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: flex-start;
+}
+
+#palette {
+    display: flex; gap: 10px; overflow-x: auto;
+    align-items: center; max-width: 100%; padding: 5px 2px;
+    scrollbar-width: auto; /* Restores standard thin scroll bar line indicators so she knows she can scroll right */
+}
+
+.color-dot {
+    width: 38px; height: 38px; border-radius: 50%; /* Sized down slightly from 44px to accommodate 40 options beautifully */
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem; color: #555;
+    background-color: #fff; cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.4); 
+    transition: all 0.2s ease; flex-shrink: 0; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+}
+
+.color-dot.active {
+    border-color: #fff; transform: scale(1.15);
+    box-shadow: 0 0 0 4px #4138bd, 0 6px 12px rgba(0,0,0,0.15); /* Green active selection ring accent */
+    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
