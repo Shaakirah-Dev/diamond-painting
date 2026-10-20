@@ -2161,3 +2161,23 @@ const gameData = {
     ]
   ]
 };
+(function validateGameData() {
+    const { width, height, grid, palette } = gameData;
+
+    if (grid.length !== height || grid.some(row => row.length !== width)) {
+        console.error("Grid dimensions do not match width and height.");
+        return;
+    }
+
+    const invalidCodes = [
+        ...new Set(
+            grid.flat().filter(code => !palette[String(code)])
+        )
+    ];
+
+    if (invalidCodes.length) {
+        console.error("Missing palette colours:", invalidCodes);
+    } else {
+        console.log("Game data validated successfully.");
+    }
+})();
