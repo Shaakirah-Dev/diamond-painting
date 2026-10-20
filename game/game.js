@@ -54,19 +54,19 @@ window.resetEntirePainting = function() {
 
 // FEATURE 2: PERFECT MATCHING CONTAINMENT CENTERING
 function centerGrid() {
-    const scaleX = canvas.width / gridWidthPx;
-    const scaleY = canvas.height / gridHeightPx;
+    const scaleX = canvas.width / (window.devicePixelRatio || 1) / gridWidthPx;
+    const scaleY = canvas.height / (window.devicePixelRatio || 1) / gridHeightPx;
     
     minZoom = Math.min(scaleX, scaleY) * 0.95; 
     
     if (zoom <= minZoom) {
         zoom = minZoom;
-        panX = (canvas.width - gridWidthPx * zoom) / 2;
-        panY = (canvas.height - gridHeightPx * zoom) / 2;
+        panX = (canvas.width / (window.devicePixelRatio || 1) - gridWidthPx * zoom) / 2;
+        panY = (canvas.height / (window.devicePixelRatio || 1) - gridHeightPx * zoom) / 2;
     } else {
-        const maxX = canvas.width - (gridWidthPx * zoom * 0.1);
+        const maxX = canvas.width / (window.devicePixelRatio || 1) - (gridWidthPx * zoom * 0.1);
         const minX = -(gridWidthPx * zoom * 0.9);
-        const maxY = canvas.height - (gridHeightPx * zoom * 0.1);
+        const maxY = canvas.height / (window.devicePixelRatio || 1) - (gridHeightPx * zoom * 0.1);
         const minY = -(gridHeightPx * zoom * 0.9);
         
         if (panX > maxX) panX = maxX;
@@ -107,10 +107,10 @@ Object.keys(gameData.palette).forEach(code => {
 function resizeCanvas() {
     if (canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
     
-    // SCALE RESULUTION DEVICE PIXEL RATIO FOR CRISP READABLE NUMBERS ON PHONE RETINA SCREENS
     const dpr = window.devicePixelRatio || 1;
     canvas.width = canvas.clientWidth * dpr;
     canvas.height = canvas.clientHeight * dpr;
+    ctx.resetTransform();
     ctx.scale(dpr, dpr);
     
     centerGrid();
@@ -123,8 +123,8 @@ const layoutObserver = new ResizeObserver(() => {
 layoutObserver.observe(canvas);
 
 function drawGame() {
-    // Clear bounds considering device pixel ratios
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
     
     ctx.save();
     ctx.translate(panX, panY);
@@ -152,9 +152,8 @@ function drawGame() {
                 ctx.strokeStyle = "#d6d2e6";
                 ctx.stroke();
                 
-                // Numbers scale crisply to matching magnification matrix values
                 ctx.fillStyle = "#7a7693";
-                ctx.font = `bold ${Math.max(10, 11 / zoom)}px sans-serif`;
+                ctx.font = "bold 11px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(targetColorCode, posX, posY);
@@ -251,20 +250,23 @@ canvas.addEventListener('wheel', (e) => {
     drawGame();
 }, { passive: false });
 
-// MOBILE INTERFACES FIXED PROPER POINTER VECTOR EXTRACTIONS
+// MOBILE INTERFACES FIXED WITH PROPER INDEXED FINGER TARGETS ([0])
 let touchStartDist = 0;
 canvas.addEventListener('touchstart', (e) => {
-    if (currentMode === "move" && e.touches.length === 1) {
-        isPanning = true;
-        isDrawing = false;
-        startX = e.touches[0].clientX - panX;
-        startY = e.touches[0].clientY - panY;
-    } else if (e.touches.length === 1) {
-        isDrawing = true;
-        isPanning = false;
-        handlePaint(e.touches[0].clientX, e.touches[0].clientY);
+    if (e.touches.length === 1) {
+        const touch = e.touches[0]; // READS FIRST FINGER TARGET DIRECTLY
+        if (currentMode === "move") {
+            isPanning = true;
+            isDrawing = false;
+            startX = touch.clientX - panX;
+            startY = touch.clientY - panY;
+        } else {
+            isDrawing = true;
+            isPanning = false;
+            handlePaint(touch.clientX, touch.clientY);
+        }
     } else if (e.touches.length === 2) {
-        // Handle multi-finger pinch setup boundaries
+        // Multi-finger setup tracking
         isDrawing = false;
         isPanning = true;
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
@@ -276,27 +278,30 @@ canvas.addEventListener('touchstart', (e) => {
 });
 
 canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
+    e.preventDefault(); // PREVENTS MOBILE BROWSER FROM BOUNCING OR DRAG-SCROLLING THE WHOLE PAGE
+    
     if (currentMode === "move" && e.touches.length === 1 && isPanning) {
-        panX = e.touches[0].clientX - startX;
-        panY = e.touches[0].clientY - startY;
+        const touch = e.touches[0];
+        panX = touch.clientX - startX;
+        panY = touch.clientY - startY;
         centerGrid();
         drawGame();
-    } else if (e.touches.length === 1 && isDrawing) {
-        handlePaint(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (currentMode === "paint" && e.touches.length === 1 && isDrawing) {
+        const touch = e.touches[0];
+        handlePaint(touch.clientX, touch.clientY);
     } else if (e.touches.length === 2 && isPanning) {
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
         panX = midX - startX;
         panY = midY - startY;
         
-        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        if (touchStartDist > 0) {
-            const factor = dist / touchStartDist;
-            zoom = Math.min(Math.max(zoom * factor, minZoom), 5.0);
-            touchStartDist = dist;
-        }
-        centerGrid();
+const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+if (touchStartDist > 0) {
+const factor = dist / touchStartDist;
+zoom = Math.min(Math.max(zoom * factor, minZoom), 5.0);
+touchStartDist = dist;
+}
+centerGrid();
 drawGame();
 }
 }, { passive: false });
@@ -310,15 +315,15 @@ if (!progressGrid[r][c]) return;
 }
 }
 hasWon = true;
-// Call the zoom out animation sequences
 let startZoom = zoom;
 let startPanX = panX;
 let startPanY = panY;
-const scaleX = canvas.width / gridWidthPx;
-const scaleY = canvas.height / gridHeightPx;
+const dpr = window.devicePixelRatio || 1;
+const scaleX = (canvas.width / dpr) / gridWidthPx;
+const scaleY = (canvas.height / dpr) / gridHeightPx;
 let targetZoom = Math.min(scaleX, scaleY) * 0.95;
-let targetPanX = (canvas.width - gridWidthPx * targetZoom) / 2;
-let targetPanY = (canvas.height - gridHeightPx * targetZoom) / 2;
+let targetPanX = ((canvas.width / dpr) - gridWidthPx * targetZoom) / 2;
+let targetPanY = ((canvas.height / dpr) - gridHeightPx * targetZoom) / 2;
 let startTime = null;
 function animateZoomOut(timestamp) {
 if (!startTime) startTime = timestamp;
@@ -335,7 +340,8 @@ else triggerShimmerSweep();
 requestAnimationFrame(animateZoomOut);
 }
 function drawGameBaseNoWin() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
+const dpr = window.devicePixelRatio || 1;
+ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 ctx.save();
 ctx.translate(panX, panY);
 ctx.scale(zoom, zoom);
